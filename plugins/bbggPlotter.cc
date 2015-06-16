@@ -19,6 +19,7 @@
 
 // system include files
 #include <memory>
+#include <math.h>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
@@ -49,6 +50,7 @@ class bbggPlotter : public edm::EDAnalyzer {
       //Parameter tokens
       EDGetTokenT<View<DiPhotonCandidate> > diPhotonToken_;
       EDGetTokenT<View<Jet> > thejetToken_;
+      edm::InputTag rhoFixedGrid_
 
       //Thresholds
       vector<double> ph_pt;
@@ -142,7 +144,7 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       def_cand_mass.push_back(0.);	def_cand_mass.push_back(2000.);
 
 //Get thresholds from config file
-      ph_pt     = iConfig.getUntrackedParameter<vector<double > >("PhotonPt", def_ph_pt);
+      ph_pt     = iConfig.getUntrackedParameter<vector<double > >("PhotonPtOverDiPhotonMass", def_ph_pt);
       ph_eta    = iConfig.getUntrackedParameter<vector<double > >("PhotonEta", def_ph_eta);
       ph_hoe    = iConfig.getUntrackedParameter<vector<double > >("PhotonHoverE", def_ph_hoe);
       ph_sieie  = iConfig.getUntrackedParameter<vector<double > >("PhotonSieie", def_ph_sieie);
@@ -157,7 +159,7 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       diph_eta  = iConfig.getUntrackedParameter<vector<double > >("DiPhotonEta", def_diph_eta);
       diph_mass = iConfig.getUntrackedParameter<vector<double > >("DiPhotonMassWindow", def_diph_mass),;
 
-      jt_pt     = iConfig.getUntrackedParameter<vector<double > >("JetPt", def_jt_pt);
+      jt_pt     = iConfig.getUntrackedParameter<vector<double > >("JetPtOverDiJetMass", def_jt_pt);
       jt_eta    = iConfig.getUntrackedParameter<vector<double > >("JetEta", def_jt_eta);
       jt_bDis   = iConfig.getUntrackedParameter<vector<double > >("JetBDiscriminant", def_jt_bDis);
       jt_doPU   = iConfig.getUntrackedParameter<vector<double > >("JetDoPUID", def_jt_doPU),;
@@ -167,6 +169,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       dijt_mass = iConfig.getUntrackedParameter<vector<double > >("DiJetMassWindow", def_dijt_mass);
 
       cand_mass = iConfig.getUntrackedParameter<vector<double > >("CandidateMassWindow", def_cand_mass);
+
+      rhoFixedGrid_  = iConfig.getParameter<edm::InputTag>( "rhoFixedGridCollection" );
 
 }
 
