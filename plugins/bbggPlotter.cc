@@ -46,6 +46,13 @@ class bbggPlotter : public edm::EDAnalyzer {
       virtual void analyze(const edm::Event&, const edm::EventSetup&) override;
       virtual void endJob() override;
 
+      // ---------- extra methods... ---------------------
+      double getCHisoToCutValue(edm::Ptr<flashgg::DiPhotonCandidate> dipho, int whichPho, float rho);
+      double getNHisoToCutValue(flashgg::Photon* pho, float rho);
+      double getPHisoToCutValue(flashgg::Photon* pho, float rho);
+      double getEA( float eta, int whichEA);
+
+
       // ----------member data ---------------------------
       //Parameter tokens
       EDGetTokenT<View<DiPhotonCandidate> > diPhotonToken_;
@@ -193,18 +200,206 @@ void
 bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
+	 
+   double dipho_pt = -1, dipho_eta = -1, dipho_mass = -1;
+   double dijet_pt = -1, dijet_eta = -1, dijet_mass = -1;
+   double cand_pt = -1, cand_eta = -1, cand_mass = -1;
+   double pho1_pt = -1, pho1_eta = -1, pho1_hoe = -1, pho1_sieie = -1, pho1_r9 = -1, pho1_chiso = -1, pho1_nhiso = -1, pho1_phiso = -1, pho1_elveto = -1;
+   double pho2_pt = -1, pho2_eta = -1, pho2_hoe = -1, pho2_sieie = -1, pho2_r9 = -1, pho2_chiso = -1, pho2_nhiso = -1, pho2_phiso = -1, pho2_elveto = -1;
+   double jet1_pt = -1, jet1_eta = -1, jet1_bDis = -1;
+   double jet2_pt = -1, jet2_eta = -1, jet2_bDis = -1;
+
+   Handle<View<flashgg::DiPhotonCandidate> > diPhotons;
+   evt.getByToken( diPhotonToken_, diPhotons );
+   Handle<View<flashgg::Jet> > theJets;
+   evt.getByToken( thejetToken_, theJets );
+   Handle<double> rhoHandle;        // the old way for now...move to getbytoken?
+   evt.getByLabel( rhoFixedGrid_, rhoHandle );
+   const double rhoFixedGrd = *( rhoHandle.product() );
+
+   bool isValidDiPhotonCandidate = false;
+
+   for( unsigned int diphoIndex = 0; diphoIndex < diPhotons->size(); diphoIndex++ )
+   {
+	 edm::Ptr<flashgg::DiPhotonCandidate> dipho = diPhotons->ptrAt( diphoIndex );
+	 
+	 dipho_pt = dipho->pt(); dipho_eta = dipho->eta(); dipho_mass = dipho->mass();
+		 
+	 if(dipho_mass < diph_mass[0] || dipho_mass > diph_mass[1]) continue;
+		 
+	 pho1_pt = dipho->leadingPhoton()->pt();			pho2_pt = dipho->subLeadingPhoton()->pt();
+	 pho1_eta = dipho->leadingPhoton()->superCluster()->eta();	pho2_eta = dipho->subLeadingPhoton()->superCluster()->eta();
+	 pho1_hoe = dipho->leadingPhoton()->hadronicOverEm(); 		pho2_hoe = dipho->subLeadingPhoton()->hadronicOverEm();
+	 pho1_sieie = dipho->leadingPhoton()->full5x5_sigmaIetaIeta();	pho2_sieie = dipho->subLeadingPhoton()->full5x5_sigmaIetaIeta();
+	 pho1_r9 = dipho->leadingPhoton()->r9();			pho2_r9 = dipho->subLeadingPhoton()->r9();
+	 pho1_elveto = dipho->leadingPhoton()->passElectronVeto();	pho2_elveto = dipho->subLeadingPhoton()->passElectronVeto();
+		 
+//		 pho1_chiso = dipho->leadingView().pfChIso03WrtChosenVtx();	pho2_chiso = dipho->subLeadingView().pfChIso03WrtChosenVtx();
+//		 pho1_nhiso = dipho->leadingPhoton()->pfNeutIso03();		pho2_nhiso = dipho->subLeadingPhoton()->pfNeutIso03();
+//		 pho1_phiso = dipho->leadingPhoton()->pfPhoIso03();		pho2_phiso = dipho->subLeadingPhoton()->pfPhoIso03();
+
+	 pho1_chiso = bbgPlotter::getCHisoToCutValue( dipho, 0, rhoFixedGrd);
+	 pho2_chiso = bbgPlotter::getCHisoToCutValue( dipho, 1, rhoFixedGrd);
+	 pho1_nhiso = bbgPlotter::getNHisoToCutValue( dipho->leadingPhoton(), rhoFixedGrd );
+	 pho2_nhiso = bbgPlotter::getNHisoToCutValue( dipho->subLeadingPhoton(), rhoFixedGrd );
+	 pho1_phiso = bbgPlotter::getPHisoToCutValue( dipho->leadingPhoton(), rhoFixedGrd );
+	 pho2_phiso = bbgPlotter::getPHisoToCutValue( dipho->subLeadingPhoton(), rhoFixedGrd );
+
+		 
+	 if( pho1_pt < dipho_mass*ph_pt[0] ) continue;
+	 if( fabs(pho1_eta) > ph_eta[1] ) continue;
+	 if( pho2_pt < dipho->mass()*ph_pt[1] ) continue;
+	 if( fabs(pho2_eta) > ph_eta[1] ) continue;
+		 
+	 bool pho1_id = true, pho2_id = true;
+	 if( ph_doID[0] )
+	 {
+	   int pho1Index = 0;
+	   if( fabs(pho1_eta) > ph_eta[0] ) pho1Index = 1;
+			 
+	   if( pho1_hoe > ph_hoe[pho1Index] ) 	pho1_id = false;
+	   if( pho1_sieie > ph_sieie[pho1Index] ) pho1_id = false;
+	   if( pho1_chiso > ph_chIso[pho1Index] ) pho1_id = false;
+	   if( pho1_nhiso > ph_nhIso[pho1Index] ) pho1_id = false;
+	   if( pho1_phiso > ph_phIso[pho1Index] ) pho1_id = false;
+	   if( pho1_elveto != ph_elVeto[0] ) 	pho1_id = false;
+	}
+	if( ph_doID[1] )
+	{
+	   int pho2Index = 2;
+	   if( fabs(pho2_eta) > ph_eta[0] ) pho2Index = 3;
+		 
+	   if( pho2_hoe > ph_hoe[pho1Index] ) 	pho2_id = false;
+	   if( pho2_sieie > ph_sieie[pho1Index] ) pho2_id = false;
+	   if( pho2_chiso > ph_chIso[pho1Index] ) pho2_id = false;
+	   if( pho2_nhiso > ph_nhIso[pho1Index] ) pho2_id = false;
+	   if( pho2_phiso > ph_phIso[pho1Index] ) pho2_id = false;
+	   if( pho2_elveto != ph_elVeto[1] ) 	pho2_id = false;
+	}
+
+	if(pho1_id == true && pho2_id == true){
+	  isValidDiPhotonCandidate = true;
+	  break;
+	}
+		 
+   }
+
+   if( isValidDiPhotonCandidate == false ) return;
+	 
 
 
+   hists["dipho_pt"]->Fill(dipho_pt);
+   hists["dipho_eta"]->Fill(dipho_eta);
+   hists["dipho_mass"]->Fill(dipho_mass);
 
-#ifdef THIS_IS_AN_EVENT_EXAMPLE
-   Handle<ExampleData> pIn;
-   iEvent.getByLabel("example",pIn);
-#endif
-   
-#ifdef THIS_IS_AN_EVENTSETUP_EXAMPLE
-   ESHandle<SetupData> pSetup;
-   iSetup.get<SetupRecord>().get(pSetup);
-#endif
+   hists["dijet_pt"]->Fill(dijet_pt);
+   hists["dijet_eta"]->Fill(dijet_eta);
+   hists["dijet_mass"]->Fill(dijet_mass);
+
+   hists["cand_pt"]->Fill(cand_pt);
+   hists["cand_eta"]->Fill(cand_eta);
+   hists["cand_mass"]->Fill(cand_mass);
+
+   hists["pho1_pt"]->Fill(pho1_pt);
+   hists["pho1_eta"]->Fill(pho1_eta);
+   hists["pho1_hoe"]->Fill(pho1_hoe);
+   hists["pho1_sieie"]->Fill(pho1_sieie);
+   hists["pho1_r9"]->Fill(pho1_r9);
+   hists["pho1_chiso"]->Fill(pho1_chiso);
+   hists["pho1_nhiso"]->Fill(pho1_nhiso);
+   hists["pho1_phiso"]->Fill(pho1_phiso);
+   hists["pho1_elveto"]->Fill(pho1_elveto);
+
+   hists["pho2_pt"]->Fill(pho2_pt);
+   hists["pho2_eta"]->Fill(pho2_eta);
+   hists["pho2_hoe"]->Fill(pho2_hoe);
+   hists["pho2_sieie"]->Fill(pho2_sieie);
+   hists["pho2_r9"]->Fill(pho2_r9);
+   hists["pho2_chiso"]->Fill(pho2_chiso);
+   hists["pho2_nhiso"]->Fill(pho2_nhiso);
+   hists["pho2_phiso"]->Fill(pho2_phiso);
+   hists["pho2_elveto"]->Fill(pho2_elveto);
+
+   hists["jet1_pt"]->Fill(jet1_pt);
+   hists["jet1_eta"]->Fill(jet1_eta);
+   hists["jet1_bDis"]->Fill(jet1_bDis);
+   hists["jet2_pt"]->Fill(jet2_pt);
+   hists["jet2_eta"]->Fill(jet2_eta);
+   hists["jet2_bDis"]->Fill(jet2_bDis);
+
+
+}
+
+// ------------ Extra methods... -------------
+//
+double bbgPlotter::getCHisoToCutValue(edm::Ptr<flashgg::DiPhotonCandidate> dipho, int whichPho, float rho)
+{
+	double PFIso, eta;
+	if(whichPho == 0) {
+		PFIso = dipho->leadingView().pfChIso03WrtChosenVtx();
+		eta = dipho->leadingPhoton()->superCluster()->eta();
+	}
+	if(whichPho == 1) {
+		PFIso = dipho->subLeadingView().pfChIso03WrtChosenVtx();
+		eta = dipho->subLeadingPhoton()->superCluster()->eta();
+	}
+	
+	double EA = bbgPlotter::getEA(eta, 0);
+	double finalValue = max(PFIso - rho*EA, 0.);
+	return finalValue;
+}
+
+double bbgPlotter::getNHisoToCutValue(flashgg::Photon* pho, float rho)
+{
+	double PFIso = pho->pfNeutIso03();
+	double eta = pho->superCluster()->eta();
+	double EA = bbgPlotter::getEA(eta, 1);
+	double extraFactor = 0;
+	if(fabs(eta) < 1.479) extraFactor = exp(0.0028*pho->pt()+0.5408);
+	if(fabs(eta) > 1.479) extraFactor = 0.01725*pho->pt();
+	double finalValue = max(PFIso - rho*EA, 0.) - extraFactor;
+	return finalValue;
+}
+
+double bbgPlotter::getPHisoToCutValue(flashgg::Photon* pho, float rho)
+{
+	double PFIso = pho->pfPhoIso03();
+	double eta = pho->superCluster()->eta();
+	double EA = bbgPlotter::getEA(eta, 2);
+	double extraFactor = 0;
+	if(fabs(eta) < 1.479) extraFactor = 0.0014*pho->pt();
+	if(fabs(eta) > 1.479) extraFactor = 0.0091*pho->pt();
+	double finalValue = max(PFIso - rho*EA, 0.) - extraFactor;
+	return finalValue;
+}
+
+double bbgPlotter::getEA( float eta, int whichEA){
+        if(whichEA < 0 || whichEA > 2){
+                cout << "WRONG EA TYPE" << endl;
+                return -1;
+        }
+
+        float EA[7][3];
+
+        EA[0][0] = 0.0234; EA[0][1] = 0.0053; EA[0][2] = 0.078;
+        EA[1][0] = 0.0189; EA[1][1] = 0.0103; EA[1][2] = 0.0629;
+        EA[2][0] = 0.0171; EA[2][1] = 0.0057; EA[2][2] = 0.0264;
+        EA[3][0] = 0.0129; EA[3][1] = 0.0070; EA[3][2] = 0.0462;
+        EA[4][0] = 0.0110; EA[4][1] = 0.0152; EA[4][2] = 0.0740;
+        EA[5][0] = 0.0074; EA[5][1] = 0.0232; EA[5][2] = 0.0924;
+        EA[6][0] = 0.0035; EA[6][1] = 0.1709; EA[6][2] = 0.1484;
+
+        float feta = fabs(eta);
+
+        if(feta > 0.000 && feta < 1.000 ) return EA[0][whichEA];
+        if(feta > 1.000 && feta < 1.479 ) return EA[1][whichEA];
+        if(feta > 1.479 && feta < 2.000 ) return EA[2][whichEA];
+        if(feta > 2.000 && feta < 2.200 ) return EA[3][whichEA];
+        if(feta > 2.200 && feta < 2.300 ) return EA[4][whichEA];
+        if(feta > 2.300 && feta < 2.400 ) return EA[5][whichEA];
+        if(feta > 2.400 && feta < 10.00 ) return EA[6][whichEA];
+
+        return -1;
 }
 
 
