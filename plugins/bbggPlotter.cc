@@ -48,9 +48,7 @@ class bbggPlotter : public edm::EDAnalyzer {
       // ----------member data ---------------------------
       //Parameter tokens
       EDGetTokenT<View<DiPhotonCandidate> > diPhotonToken_;
-      EDGetTokenT<View<Photon> > photonToken_;
       EDGetTokenT<View<Jet> > thejetToken_;
-      EDGetTokenT<View<reco::Vertex> > vertexToken_;
 
       //Thresholds
       vector<double> ph_pt;
@@ -87,10 +85,7 @@ class bbggPlotter : public edm::EDAnalyzer {
 
 bbggPlotter::bbggPlotter(const edm::ParameterSet& iConfig)
 diPhotonToken_( consumes<View<flashgg::DiPhotonCandidate> >( iConfig.getUntrackedParameter<InputTag> ( "DiPhotonTag", InputTag( "flashggDiPhotons" ) ) ) ),
-photonToken_( consumes<View<flashgg::Photon> >( iConfig.getUntrackedParameter<InputTag>( "PhotonTag", InputTag( "flashggPhotons" ) ) ) ),
-thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<InputTag>( "JetTag", InputTag( "flashggJets" ) ) ) ),
-vertexToken_( consumes<View<reco::Vertex> >( iConfig.getUntrackedParameter<InputTag> ( "VertexTag", InputTag( "offlinePrimaryVertices" ) ) ) )
-
+thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<InputTag>( "JetTag", InputTag( "flashggJets" ) ) ) )
 {
    //now do what ever initialization is needed
 //Default values for thresholds
