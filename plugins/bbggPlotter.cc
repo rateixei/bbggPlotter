@@ -309,17 +309,21 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    hists["dipho_eta"]->Fill(dipho_eta);
    hists["dipho_phi"]->Fill(dipho_phi);
    hists["dipho_mass"]->Fill(dipho_mass);
-
+	
    hists["dijet_pt"]->Fill(dijet_pt);
    hists["dijet_eta"]->Fill(dijet_eta);
+   hists["dijet_phi"]->Fill(dijet_phi);
    hists["dijet_mass"]->Fill(dijet_mass);
-
+	
    hists["cand_pt"]->Fill(cand_pt);
    hists["cand_eta"]->Fill(cand_eta);
+   hists["cand_phi"]->Fill(cand_phi);
    hists["cand_mass"]->Fill(cand_mass);
-
+	
    hists["pho1_pt"]->Fill(pho1_pt);
    hists["pho1_eta"]->Fill(pho1_eta);
+   hists["pho1_phi"]->Fill(pho1_phi);
+	
    hists["pho1_hoe"]->Fill(pho1_hoe);
    hists["pho1_sieie"]->Fill(pho1_sieie);
    hists["pho1_r9"]->Fill(pho1_r9);
@@ -327,9 +331,11 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    hists["pho1_nhiso"]->Fill(pho1_nhiso);
    hists["pho1_phiso"]->Fill(pho1_phiso);
    hists["pho1_elveto"]->Fill(pho1_elveto);
-
+	
    hists["pho2_pt"]->Fill(pho2_pt);
    hists["pho2_eta"]->Fill(pho2_eta);
+   hists["pho2_phi"]->Fill(pho2_phi);
+	
    hists["pho2_hoe"]->Fill(pho2_hoe);
    hists["pho2_sieie"]->Fill(pho2_sieie);
    hists["pho2_r9"]->Fill(pho2_r9);
@@ -337,14 +343,18 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    hists["pho2_nhiso"]->Fill(pho2_nhiso);
    hists["pho2_phiso"]->Fill(pho2_phiso);
    hists["pho2_elveto"]->Fill(pho2_elveto);
-
+	
    hists["jet1_pt"]->Fill(jet1_pt);
    hists["jet1_eta"]->Fill(jet1_eta);
+   hists["jet1_phi"]->Fill(jet1_phi);
    hists["jet1_bDis"]->Fill(jet1_bDis);
+   hists["jet1_PUid"]->Fill(jet1_PUid);
+	
    hists["jet2_pt"]->Fill(jet2_pt);
    hists["jet2_eta"]->Fill(jet2_eta);
+   hists["jet2_phi"]->Fill(jet2_phi);
    hists["jet2_bDis"]->Fill(jet2_bDis);
-
+   hists["jet2_PUid"]->Fill(jet2_PUid);
 
 }
 
