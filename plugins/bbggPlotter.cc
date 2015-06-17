@@ -80,6 +80,7 @@ class bbggPlotter : public edm::EDAnalyzer {
       vector<double> jt_eta;
       vector<double> jt_bDis;
       vector<bool> jt_doPU;
+      int n_bJets;
 
       vector<double> dijt_pt;
       vector<double> dijt_eta;
@@ -118,6 +119,7 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       vector<double> def_jt_eta;
       vector<double> def_jt_bDis;
       vector<bool> def_jt_doPU;
+      int def_n_bJets;
 
       vector<double> def_dijt_pt;
       vector<double> def_dijt_eta;
@@ -147,6 +149,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       def_jt_bDis.push_back(0.);        def_jt_bDis.push_back(0.);
       def_jt_doPU.push_back(false);     def_jt_doPU.push_back(false);
 
+      def_n_bJets = 0;
+
       def_dijt_pt.push_back(10.);       def_dijt_pt.push_back(10.);
       def_dijt_eta.push_back(0.);       def_dijt_eta.push_back(0.);
       def_dijt_mass.push_back(0.);      def_dijt_mass.push_back(1000.);
@@ -174,7 +178,9 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       jt_pt     = iConfig.getUntrackedParameter<vector<double > >("JetPtOverDiJetMass", def_jt_pt);
       jt_eta    = iConfig.getUntrackedParameter<vector<double > >("JetEta", def_jt_eta);
       jt_bDis   = iConfig.getUntrackedParameter<vector<double > >("JetBDiscriminant", def_jt_bDis);
-      jt_doPU   = iConfig.getUntrackedParameter<vector<double > >("JetDoPUID", def_jt_doPU),;
+      jt_doPU   = iConfig.getUntrackedParameter<vector<double > >("JetDoPUID", def_jt_doPU);
+
+      n_bJets = iConfig.getUntrackedParameter<int>("n_bJets", def_n_bJets);
 
       dijt_pt   = iConfig.getUntrackedParameter<vector<double > >("DiJetPt", def_dijt_pt);
       dijt_eta  = iConfig.getUntrackedParameter<vector<double > >("DiJetEta", def_dijt_eta);
