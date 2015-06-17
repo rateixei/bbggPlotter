@@ -214,13 +214,15 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 {
    using namespace edm;
 	 
-   double dipho_pt = -1, dipho_eta = -1, dipho_mass = -1;
-   double dijet_pt = -1, dijet_eta = -1, dijet_mass = -1;
-   double cand_pt = -1, cand_eta = -1, cand_mass = -1;
-   double pho1_pt = -1, pho1_eta = -1, pho1_hoe = -1, pho1_sieie = -1, pho1_r9 = -1, pho1_chiso = -1, pho1_nhiso = -1, pho1_phiso = -1, pho1_elveto = -1;
-   double pho2_pt = -1, pho2_eta = -1, pho2_hoe = -1, pho2_sieie = -1, pho2_r9 = -1, pho2_chiso = -1, pho2_nhiso = -1, pho2_phiso = -1, pho2_elveto = -1;
-   double jet1_pt = -1, jet1_eta = -1, jet1_bDis = -1;
-   double jet2_pt = -1, jet2_eta = -1, jet2_bDis = -1;
+   double dipho_pt = -1, dipho_eta = -1, dipho_phi = -1; dipho_mass = -1;
+   double dijet_pt = -1, dijet_eta = -1, dipho_phi = -1; dijet_mass = -1;
+   double cand_pt = -1, cand_eta = -1, cand_phi = -1; cand_mass = -1;
+   double pho1_pt = -1, pho1_eta = -1, pho1_phi = -1;
+   double pho1_hoe = -1, pho1_sieie = -1, pho1_r9 = -1, pho1_chiso = -1, pho1_nhiso = -1, pho1_phiso = -1, pho1_elveto = -1;
+   double pho2_pt = -1, pho2_eta = -1, pho2_phi = -1;
+   double pho2_hoe = -1, pho2_sieie = -1, pho2_r9 = -1, pho2_chiso = -1, pho2_nhiso = -1, pho2_phiso = -1, pho2_elveto = -1;
+   double jet1_pt = -1, jet1_eta = -1, jet1_phi = -1; jet1_bDis = -1;
+   double jet2_pt = -1, jet2_eta = -1, jet2_phi = -1; jet2_bDis = -1;
 
    Handle<View<flashgg::DiPhotonCandidate> > diPhotons;
    evt.getByToken( diPhotonToken_, diPhotons );
@@ -238,12 +240,13 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    {
 	 edm::Ptr<flashgg::DiPhotonCandidate> dipho = diPhotons->ptrAt( diphoIndex );
 	 
-	 dipho_pt = dipho->pt(); dipho_eta = dipho->eta(); dipho_mass = dipho->mass();
+	 dipho_pt = dipho->pt(); dipho_eta = dipho->eta(); dipho_phi = dipho->phi(); dipho_mass = dipho->mass();
 		 
 	 if(dipho_mass < diph_mass[0] || dipho_mass > diph_mass[1]) continue;
 		 
 	 pho1_pt = dipho->leadingPhoton()->pt();			pho2_pt = dipho->subLeadingPhoton()->pt();
 	 pho1_eta = dipho->leadingPhoton()->superCluster()->eta();	pho2_eta = dipho->subLeadingPhoton()->superCluster()->eta();
+	 pho1_phi = dipho->leadingPhoton()->superCluster()->phi();	pho2_phi = dipho->subLeadingPhoton()->superCluster()->phi();
 	 pho1_hoe = dipho->leadingPhoton()->hadronicOverEm(); 		pho2_hoe = dipho->subLeadingPhoton()->hadronicOverEm();
 	 pho1_sieie = dipho->leadingPhoton()->full5x5_sigmaIetaIeta();	pho2_sieie = dipho->subLeadingPhoton()->full5x5_sigmaIetaIeta();
 	 pho1_r9 = dipho->leadingPhoton()->r9();			pho2_r9 = dipho->subLeadingPhoton()->r9();
@@ -304,6 +307,7 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 
    hists["dipho_pt"]->Fill(dipho_pt);
    hists["dipho_eta"]->Fill(dipho_eta);
+   hists["dipho_phi"]->Fill(dipho_phi);
    hists["dipho_mass"]->Fill(dipho_mass);
 
    hists["dijet_pt"]->Fill(dijet_pt);
@@ -425,18 +429,23 @@ bbggPlotter::beginJob()
 
 	hists["dipho_pt"] 	= new TH1F("dipho_pt", "DiPhoton p_{T}; p_{T}(#gamma#gamma) (GeV); Events", 100, 0, 300);
 	hists["dipho_eta"] 	= new TH1F("dipho_eta", "DiPhoton #eta; #eta(#gamma#gamma); Events", 100, -5, 5);
+	hists["dipho_phi"]	= new TH1F("dipho_phi", "DiPhoton #phi; #phi(#gamma#gamma); Events", 100, -6.5, 6.5);
 	hists["dipho_mass"] 	= new TH1F("dipho_mass", "DiPhoton Mass; M(#gamma#gamma); Events", 100, diph_mass[0], diph_mass[1]);
 
 	hists["dijet_pt"] 	= new TH1F("dijet_pt", "DiJet p_{T}; p_{T}(jj) (GeV); Events", 100, 0, 300);
 	hists["dijet_eta"] 	= new TH1F("dijet_eta", "DiJet #eta; #eta(jj); Events", 100, -5, 5);
+	hists["dijet_phi"]	= new TH1F("dijet_phi", "DiJet #phi; #phi(jj); Events", 100, -6.5, 6.5);
 	hists["dijet_mass"] 	= new TH1F("dijet_mass", "DiJet Mass; M(jj); Events", 100, dijt_mass[0], dijt_mass[1]);
 
 	hists["cand_pt"] 	= new TH1F("cand_pt", "DiHiggs Candidate (jj#gamma#gamma) p_{T}; p_{T}(jj#gamma#gamma) (GeV); Events", 100, 0, 500);
-	hists["cand_eta"] 	= new TH1F("cand_eta", "DiHiggs Candidate (jj#gamma#gamma) #eta; #eta(jj#gamma#gamma) (GeV); Events", 100, -5, 5);
+	hists["cand_eta"] 	= new TH1F("cand_eta", "DiHiggs Candidate (jj#gamma#gamma) #eta; #eta(jj#gamma#gamma); Events", 100, -5, 5);
+	hists["cand_phi"]	= new TH1F("cand_phi", "DiHiggs Candidate (jj#gamma#gamma) #phi; #phi(jj#gamma#gamma); Events", 100, -6.5, 6.5); 
 	hists["cand_mass"] 	= new TH1F("cand_mass", "DiHiggs Candidate (jj#gamma#gamma) Mass; M(jj#gamma#gamma) (GeV); Events", 100, cand_mass[0], cand_mass[1]);
 
 	hists["pho1_pt"] 	= new TH1F("pho1_pt", "Leading Photon p_{T}; p_{T}(leading #gamma) (GeV); Events", 100, 10, 150);
 	hists["pho1_eta"] 	= new TH1F("pho1_eta", "Leading Photon #eta; #eta(leading #gamma); Events", 100, -5., 5.);
+	hists["pho1_phi"]	= new TH1F("pho1_phi", "Leading Photon #phi; #phi(leading #gamma); Events", 100, -6.5, 6.5);
+
 	hists["pho1_hoe"] 	= new TH1F("pho1_hoe", "Leading Photon H/E; H/E(leading #gamma); Events", 100, -0.01, 0.1);
 	hists["pho1_sieie"] 	= new TH1F("pho1_sieie", "Leading Photon #sigma_{i#etai#eta}; #sigma_{i#etai#eta}(leading #gamma); Events", 100, 0.0, 0.04);
 	hists["pho1_r9"] 	= new TH1F("pho1_r9", "Leading Photon R9; R9(leading #gamma); Events", 100, 0, 1.1);
@@ -447,6 +456,8 @@ bbggPlotter::beginJob()
 
 	hists["pho2_pt"] 	= new TH1F("pho2_pt", "SubLeading Photon p_{T}; p_{T}(subLeading #gamma) (GeV); Events", 100, 10, 150);
 	hists["pho2_eta"] 	= new TH1F("pho2_eta", "SubLeading Photon #eta; #eta(subLeading #gamma); Events", 100, -5., 5.);
+	hists["pho2_phi"]	= new TH1F("pho2_phi", "SubLeading Photon #phi; #phi(subleading #gamma); Events", 100, -6.5, 6.5);
+
 	hists["pho2_hoe"] 	= new TH1F("pho2_hoe", "SubLeading Photon H/E; H/E(subLeading #gamma); Events", 100, -0.01, 0.1);
 	hists["pho2_sieie"] 	= new TH1F("pho2_sieie", "SubLeading Photon #sigma_{i#etai#eta}; #sigma_{i#etai#eta}(subLeading #gamma); Events", 100, 0.0, 0.04);
 	hists["pho2_r9"] 	= new TH1F("pho2_r9", "SubLeading Photon R9; R9(subLeading #gamma); Events", 100, 0, 1.1);
@@ -458,11 +469,15 @@ bbggPlotter::beginJob()
 
 	hists["jet1_pt"] 	= new TH1F("jet1_pt", "Leading Jet p_{T}; p_{T}(leading jet) (GeV); Events", 100, 10, 150);
 	hists["jet1_eta"] 	= new TH1F("jet1_eta", "Leading Jet #eta; #eta(leading jet); Events", 100, -5., 5.);
+	hists["jet1_phi"]	= new TH1F("jet1_phi", "Leading Jet #phi; #phi(leading jet); Events", 100, -6.5, 6.5);
 	hists["jet1_bDis"] 	= new TH1F("jet1_bDis", "Leading Jet b-Discriminant; b-Discriminant(leading jet); Events", 100, -0.01, 1.01);
+	hists["jet1_PUid"] 	= new TH1F("jet1_PUid", "Leading Jet PU ID; PU ID(leading jet); Events", 8, -1, 3);
 
 	hists["jet2_pt"] 	= new TH1F("jet2_pt", "SubLeading Jet p_{T}; p_{T}(subLeading jet) (GeV); Events", 100, 10, 150);
 	hists["jet2_eta"] 	= new TH1F("jet2_eta", "SubLeading Jet #eta; #eta(subLeading jet); Events", 100, -5., 5.);
+	hists["jet2_phi"]	= new TH1F("jet2_phi", "SubLeading Jet #phi; #phi(subleading jet); Events", 100, -6.5, 6.5);
 	hists["jet2_bDis"] 	= new TH1F("jet2_bDis", "SubLeading Jet b-Discriminant; b-Discriminant(subLeading jet); Events", 100, -0.01, 1.01);
+	hists["jet2_PUid"] 	= new TH1F("jet2_PUid", "SubLeading Jet PU ID; PU ID(subleading jet); Events", 8, -1, 3);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
