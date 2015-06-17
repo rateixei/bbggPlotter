@@ -42,7 +42,7 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: jet1, 1: jet2
 	JetDoPUID=cms.untracked.vdouble(1, 1),
 	#Number of required jets passing requirements in JetBDiscriminant
-	n_bJets=cms.untracked.int32(0),
+	n_bJets=cms.untracked.uint32(0),
 	#0: lower boundary for dijet pt
 	DiJetPt=cms.untracked.vdouble(10.),
 	#0: upper boundary for dijet pt
