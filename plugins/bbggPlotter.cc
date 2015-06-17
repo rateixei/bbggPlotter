@@ -58,6 +58,7 @@ class bbggPlotter : public edm::EDAnalyzer {
       EDGetTokenT<View<DiPhotonCandidate> > diPhotonToken_;
       EDGetTokenT<View<Jet> > thejetToken_;
       edm::InputTag rhoFixedGrid_
+      std::string bTagType;
 
       //Thresholds
       vector<double> ph_pt;
@@ -124,6 +125,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
 
       vector<double> def_cand_mass;
 
+      std::string def_bTagType;
+
       def_ph_pt.push_back(10.);         def_ph_pt.push_back(10.);
       def_ph_eta.push_back(0.);         def_ph_eta.push_back(0.);
       def_ph_hoe.push_back(-1.);        def_ph_hoe.push_back(-1.);
@@ -149,6 +152,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       def_dijt_mass.push_back(0.);      def_dijt_mass.push_back(1000.);
 
       def_cand_mass.push_back(0.);	def_cand_mass.push_back(2000.);
+
+      def_bTagType = "pfCombinedInclusiveSecondaryVertexV2BJetTags";
 
 //Get thresholds from config file
       ph_pt     = iConfig.getUntrackedParameter<vector<double > >("PhotonPtOverDiPhotonMass", def_ph_pt);
@@ -178,6 +183,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       cand_mass = iConfig.getUntrackedParameter<vector<double > >("CandidateMassWindow", def_cand_mass);
 
       rhoFixedGrid_  = iConfig.getParameter<edm::InputTag>( "rhoFixedGridCollection" );
+
+      bTagType = iConfig.getUntrackedParameter<std::string>( "bTagType", bTagType );
 
 }
 
