@@ -1,10 +1,10 @@
 import FWCore.ParameterSet.Config as cms
 
-process = cms.Process("Demo")
+process = cms.Process("bbggAnalyzer")
 
 process.load("FWCore.MessageService.MessageLogger_cfi")
 
-process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(-1) )
+process.maxEvents = cms.untracked.PSet( input = cms.untracked.int32(10) )
 
 process.source = cms.Source("PoolSource",
     # replace 'myfile.root' with the source file you want to use
@@ -13,8 +13,8 @@ process.source = cms.Source("PoolSource",
     )
 )
 
-process.demo = cms.EDAnalyzer('bbggPlotter'
+process.bbggAnalyzer = cms.EDAnalyzer('bbggPlotter'
 )
 
 
-process.p = cms.Path(process.demo)
+process.p = cms.Path(process.bbggAnalyzer)

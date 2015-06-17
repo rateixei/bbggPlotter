@@ -19,16 +19,24 @@
 
 // system include files
 #include <memory>
+#include <vector.h>
+#include <map.h>
 #include <math.h>
 
 // user include files
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/EDAnalyzer.h"
-
 #include "FWCore/Framework/interface/Event.h"
 #include "FWCore/Framework/interface/MakerMacros.h"
-
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
+
+//FLASHgg files
+#include "flashgg/DataFormats/interface/DiPhotonCandidate.h"
+#include "flashgg/DataFormats/interface/SinglePhotonView.h"
+#include "flashgg/DataFormats/interface/Photon.h"
+#include "flashgg/DataFormats/interface/Jet.h"
+#include "DataFormats/VertexReco/interface/Vertex.h"
+
 //
 // class declaration
 //
@@ -86,6 +94,8 @@ class bbggPlotter : public edm::EDAnalyzer {
       vector<double> dijt_eta;
       vector<double> dijt_mass; 
 
+      vector<double> cand_pt;
+      vector<double> cand_eta;
       vector<double> cand_mass;
 
       //OutFile & Hists
@@ -125,6 +135,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       vector<double> def_dijt_eta;
       vector<double> def_dijt_mass;
 
+      vector<double> def_cand_pt;
+      vector<double> def_cand_eta;
       vector<double> def_cand_mass;
 
       std::string def_bTagType;
@@ -155,7 +167,10 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       def_dijt_eta.push_back(0.);       def_dijt_eta.push_back(0.);
       def_dijt_mass.push_back(0.);      def_dijt_mass.push_back(1000.);
 
-      def_cand_mass.push_back(0.);	def_cand_mass.push_back(2000.);
+      def_cand_pt.push_back(0.);
+      def_cand_eta.push_back(0.);
+      def_cand_mass.push_back(0.);		def_cand_mass.push_back(2000.);
+
 
       def_bTagType = "pfCombinedInclusiveSecondaryVertexV2BJetTags";
 
@@ -186,6 +201,8 @@ thejetToken_( consumes<View<flashgg::Jet> >( iConfig.getUntrackedParameter<Input
       dijt_eta  = iConfig.getUntrackedParameter<vector<double > >("DiJetEta", def_dijt_eta);
       dijt_mass = iConfig.getUntrackedParameter<vector<double > >("DiJetMassWindow", def_dijt_mass);
 
+      cand_pt 	= iConfig.getUntrackedParameter<vector<double > >("CandidatePt", def_cand_mass);
+      cand_eta 	= iConfig.getUntrackedParameter<vector<double > >("CandidateEta", def_cand_mass);
       cand_mass = iConfig.getUntrackedParameter<vector<double > >("CandidateMassWindow", def_cand_mass);
 
       rhoFixedGrid_  = iConfig.getParameter<edm::InputTag>( "rhoFixedGridCollection" );
@@ -215,12 +232,17 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    using namespace edm;
 	 
    double dipho_pt = -1, dipho_eta = -1, dipho_phi = -1; dipho_mass = -1;
+   
    double dijet_pt = -1, dijet_eta = -1, dipho_phi = -1; dijet_mass = -1;
-   double cand_pt = -1, cand_eta = -1, cand_phi = -1; cand_mass = -1;
+   
+   double cand4_pt = -1, cand4_eta = -1, cand4_phi = -1; cand4_mass = -1;
+   
    double pho1_pt = -1, pho1_eta = -1, pho1_phi = -1;
    double pho1_hoe = -1, pho1_sieie = -1, pho1_r9 = -1, pho1_chiso = -1, pho1_nhiso = -1, pho1_phiso = -1, pho1_elveto = -1;
+   
    double pho2_pt = -1, pho2_eta = -1, pho2_phi = -1;
    double pho2_hoe = -1, pho2_sieie = -1, pho2_r9 = -1, pho2_chiso = -1, pho2_nhiso = -1, pho2_phiso = -1, pho2_elveto = -1;
+   
    double jet1_pt = -1, jet1_eta = -1, jet1_phi = -1; jet1_bDis = -1;
    double jet2_pt = -1, jet2_eta = -1, jet2_phi = -1; jet2_bDis = -1;
 
@@ -235,7 +257,9 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    bool isValidDiPhotonCandidate = false;
 
    edm::Ptr<reco::Vertex> CandVtx;
+   edm::Ptr<flashgg::DiPhotonCandidate> diphoCand;
 
+   //Begin DiPhoton Loop/Selection -----------------------------------------------------------
    for( unsigned int diphoIndex = 0; diphoIndex < diPhotons->size(); diphoIndex++ )
    {
 	 edm::Ptr<flashgg::DiPhotonCandidate> dipho = diPhotons->ptrAt( diphoIndex );
@@ -243,6 +267,8 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 dipho_pt = dipho->pt(); dipho_eta = dipho->eta(); dipho_phi = dipho->phi(); dipho_mass = dipho->mass();
 		 
 	 if(dipho_mass < diph_mass[0] || dipho_mass > diph_mass[1]) continue;
+	 if(fabs(dipho_eta) > diph_eta[0] ) continue;
+	 if(dipho_pt < diph_pt[0] ) continue;
 		 
 	 pho1_pt = dipho->leadingPhoton()->pt();			pho2_pt = dipho->subLeadingPhoton()->pt();
 	 pho1_eta = dipho->leadingPhoton()->superCluster()->eta();	pho2_eta = dipho->subLeadingPhoton()->superCluster()->eta();
@@ -251,10 +277,6 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	 pho1_sieie = dipho->leadingPhoton()->full5x5_sigmaIetaIeta();	pho2_sieie = dipho->subLeadingPhoton()->full5x5_sigmaIetaIeta();
 	 pho1_r9 = dipho->leadingPhoton()->r9();			pho2_r9 = dipho->subLeadingPhoton()->r9();
 	 pho1_elveto = dipho->leadingPhoton()->passElectronVeto();	pho2_elveto = dipho->subLeadingPhoton()->passElectronVeto();
-		 
-//		 pho1_chiso = dipho->leadingView().pfChIso03WrtChosenVtx();	pho2_chiso = dipho->subLeadingView().pfChIso03WrtChosenVtx();
-//		 pho1_nhiso = dipho->leadingPhoton()->pfNeutIso03();		pho2_nhiso = dipho->subLeadingPhoton()->pfNeutIso03();
-//		 pho1_phiso = dipho->leadingPhoton()->pfPhoIso03();		pho2_phiso = dipho->subLeadingPhoton()->pfPhoIso03();
 
 	 pho1_chiso = bbgPlotter::getCHisoToCutValue( dipho, 0, rhoFixedGrd);
 	 pho2_chiso = bbgPlotter::getCHisoToCutValue( dipho, 1, rhoFixedGrd);
@@ -297,13 +319,120 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	if(pho1_id == true && pho2_id == true){
 	  isValidDiPhotonCandidate = true;
+  	  CandVtx = dipho->vtx();
+	  diphoCand = dipho;
 	  break;
 	}
 
-	CandVtx = dipho->vtx();
+   }
+   if( isValidDiPhotonCandidate == false ) return;
+   //End DiPhoton Loop/Selection -----------------------------------------------------------
+   
+   //Begin Jets Loop/Selection -----------------------------------------------------------
+   vector<edm::Ptr<flashgg::Jet>> bJet;
+   vector<edm::Ptr<flashgg::Jet>> lJet;
+   int nJet1 = 0, nJet2 = 0;
+   for( unsigned int jetIndex = 0; jetIndex < theJets->size(); jetIndex++ )
+   {
+   	edm::Ptr<flashgg::Jet> jet = theJets->ptrAt( jetIndex );
+   	bool isJet1 = true, isJet2 = true;
+	
+   	if(jet->pt() < jt_pt[0]) isJet1 = false;
+   	if(fabs(jet->eta()) > jt_eta[0] ) isJet1 = false;
+   	if( jt_doPU[0] && jet->passesPuJetId(CandVtx) == 0 ) isJet1 = false;
+	
+   	if(jet->pt() < jt_pt[1]) isJet2 = false;
+   	if(fabs(jet->eta()) > jt_eta[1] ) isJet2 = false;
+   	if( jt_doPU[1] && jet->passesPuJetId(CandVtx) == 0 ) isJet2 = false;
+	
+   	if(isJet1) nJet1++;
+   	if(isJet1 == false && isJet2) nJet2++;
+	
+   	if( jet->bDiscriminator(bTagType) > jt_bDis[0] ) bJet.push_back(jet);
+   	if( jet->bDiscriminator(bTagType) < jt_bDis[0]  && jet->bDiscriminator(bTagType) > jt_bDis[1] ) lJet.push_back(jet);
    }
 
-   if( isValidDiPhotonCandidate == false ) return;
+   int totJets = nJet1 + nJet2;
+   if( nJet1 < 1 || totJets < 2 ) return;
+   if( nJet.size() < n_bJets ) return;
+
+   edm::Ptr<flashgg::Jet> jet1, jet2;
+   TLorentzVector DiJet(0,0,0,0);
+   double dijetPt_ref = 0;
+   bool hasDiJet = false;
+
+   if(bJet.size() > 1)
+   {
+   	for(unsigned int jt1 = 0; jt1 < bJet.size(); jt1++){
+   		for(unsigned int jt2 = jt1+1; jt2 < bJet.size(); jt2++){
+   			TLorentzVector dijet = bJet[jt1]->p4() + bJet[jt2]->p4();
+   			if(dijet.pt() > dijetPt_ref && dijet.pt() > dijt_pt[0] && fabs(dijet.Eta()) < dijt_eta[0] ){
+				hasDiJet = true;
+   				dijetPt_ref = dijet.pt();
+   				DiJet = dijet;
+   				if( bJet[jt1]->pt() > bJet[jt2]->pt() ) {
+   					jet1 = bJet[jt1];
+   					jet2 = bJet[jt2];
+   				} else {
+   					jet2 = bJet[jt1];
+   					jet1 = bJet[jt2];
+   				}
+
+   			}
+		}
+   	}
+   } else
+   {
+   	for(unsigned int jt1 = 0; jt1 < bJet.size(); jt1++){
+   		for(unsigned int jt2 = 0; jt2 < lJet.size(); jt2++){
+   			TLorentzVector dijet = bJet[jt1]->p4() + lJet[jt2]->p4();
+   			if(dijet.pt() > dijetPt_ref && dijet.pt() > dijt_pt[0] && fabs(dijet.Eta()) < dijt_eta[0] ){
+				hasDiJet = true;
+   				dijetPt_ref = dijet.pt();
+   				DiJet = dijet;
+   				if( bJet[jt1]->pt() > lJet[jt2]->pt() ) {
+   					jet1 = bJet[jt1];
+   					jet2 = lJet[jt2];
+   				} else {
+   					jet2 = bJet[jt1];
+   					jet1 = lJet[jt2];
+   				}
+   			}
+		}
+   	}
+   }
+   
+   if( hasDiJet == false ) return;
+   
+   dijet_pt = DiJet.Pt();
+   dijet_eta = DiJet.Eta();
+   dijet_phi = DiJet.Phi();
+   dijet_mass = DiJet.M();
+	
+   jet1_pt = jet1->pt();
+   jet1_eta = jet1->eta();
+   jet1_phi = jet1->phi();
+   jet1_bDis = jet1->bDiscriminator(bTagType);
+   jet1_PUid = jet1->passesPuJetId(CandVtx);
+	
+   jet2_pt = jet2->pt();
+   jet2_eta = jet2->eta();
+   jet2_phi = jet2->phi();
+   jet2_bDis = jet2->bDiscriminator(bTagType);
+   jet2_PUid = jet2->passesPuJetId(CandVtx);
+   //End Jets Loop/Selection -----------------------------------------------------------
+   
+   //Candidate assignment --------------------------------------------------------------
+   TLorentzVector HHCandidate = DiJet + diphoCand->p4();
+   cand4_pt = HHCandidate.Pt();
+   cand4_eta = HHCandidate.Eta();
+   cand4_phi = HHCandidate.Phi();
+   cand4_mass = HHCandidate.M();
+   if(cand4_pt < cand_pt[0] ) return;
+   if(fabs(cand4_eta) > cand_eta[0] ) return;
+   if(cand4_mass < cand_mass[0] || cand4_mass > cand_mass[1] ) return;
+   
+   //END Candidate assignment ---------------------------------------------------------- 
 	 
    hists["dipho_pt"]->Fill(dipho_pt);
    hists["dipho_eta"]->Fill(dipho_eta);
@@ -315,10 +444,10 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    hists["dijet_phi"]->Fill(dijet_phi);
    hists["dijet_mass"]->Fill(dijet_mass);
 	
-   hists["cand_pt"]->Fill(cand_pt);
-   hists["cand_eta"]->Fill(cand_eta);
-   hists["cand_phi"]->Fill(cand_phi);
-   hists["cand_mass"]->Fill(cand_mass);
+   hists["cand4_pt"]->Fill(cand4_pt);
+   hists["cand4_eta"]->Fill(cand4_eta);
+   hists["cand4_phi"]->Fill(cand4_phi);
+   hists["cand4_mass"]->Fill(cand4_mass);
 	
    hists["pho1_pt"]->Fill(pho1_pt);
    hists["pho1_eta"]->Fill(pho1_eta);
@@ -494,6 +623,13 @@ bbggPlotter::beginJob()
 void 
 bbggPlotter::endJob() 
 {
+	outFile->cd();
+	for(std::map<std::string, TH1F*>::iterator it = hists.begin(); it != hists.end(); ++it)
+	{
+		cout << "Saving histogram... " << it->first << endl;
+		it->second->Write();
+	}
+	outFile->Close();
 }
 
 
