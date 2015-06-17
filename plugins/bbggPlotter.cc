@@ -226,6 +226,8 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    bool isValidDiPhotonCandidate = false;
 
+   edm::Ptr<reco::Vertex> CandVtx;
+
    for( unsigned int diphoIndex = 0; diphoIndex < diPhotons->size(); diphoIndex++ )
    {
 	 edm::Ptr<flashgg::DiPhotonCandidate> dipho = diPhotons->ptrAt( diphoIndex );
@@ -288,13 +290,12 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 	  isValidDiPhotonCandidate = true;
 	  break;
 	}
-		 
+
+	CandVtx = dipho->vtx();
    }
 
    if( isValidDiPhotonCandidate == false ) return;
 	 
-
-
    hists["dipho_pt"]->Fill(dipho_pt);
    hists["dipho_eta"]->Fill(dipho_eta);
    hists["dipho_mass"]->Fill(dipho_mass);
