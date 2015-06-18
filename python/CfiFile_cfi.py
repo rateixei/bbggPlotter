@@ -8,9 +8,9 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	JetTag=cms.untracked.InputTag('flashggJets'),
 	rhoFixedGridCollection=cms.untracked.InputTag('fixedGridRhoAll'),
 	#0: Pho1, 1: Pho2
-	PhotonPtOverDiPhotonMass=cms.untracked.vdouble(0., 0.),
+	PhotonPtOverDiPhotonMass=cms.untracked.vdouble( 0.333, 0.25 ),
 	#0: First upper boundary (EB), 1: second upper boundary (EE) (only (1) is used to cut on both)
-	PhotonEta=cms.untracked.vdouble(1.479, 2.400),
+	PhotonEta=cms.untracked.vdouble(1.479, 2.50),
 	#0: Pho1 EB, 1: Pho1 EE, 2: Pho2 EB, 3: Pho2 EE
 	PhotonHoverE=cms.untracked.vdouble(0.012, 0.023, 0.012, 0.023 ),
 	#0: Pho1 EB, 1: Pho1 EE, 2: Pho2 EB, 3: Pho2 EE
@@ -26,11 +26,11 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: Pho1, 1: Pho2
 	PhotonElectronVeto=cms.untracked.vdouble(0., 0.),
 	#0: Pho1, 1: Pho2
-	PhotonDoID=cms.untracked.vint32(0, 0,),
+	PhotonDoID=cms.untracked.vint32(0 , 0),
 	#0: lower boundary for dipho pt
 	DiPhotonPt=cms.untracked.vdouble(0.),
 	#0: upper boundary
-	DiPhotonEta=cms.untracked.vdouble(2.4),
+	DiPhotonEta=cms.untracked.vdouble(2.5),
 	#0: DiPhoton mass window lower boundary, 1: upper boundary
 	DiPhotonMassWindow=cms.untracked.vdouble(80., 165.),
 	#0: jet1, 1: jet2
@@ -38,7 +38,7 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: jet1, 1: jet2
 	JetEta=cms.untracked.vdouble(2.5, 2.5),
 	#0: lowest b-tag requirement for any jet (default 0), standard b-tag cut (loose, medium, tight) 
-	JetBDiscriminant=cms.untracked.vdouble(0., 0.7),
+	JetBDiscriminant=cms.untracked.vdouble(0., 0.87),
 	#0: jet1, 1: jet2
 	JetDoPUID=cms.untracked.vint32(1, 1),
 	#Number of required jets passing requirements in JetBDiscriminant

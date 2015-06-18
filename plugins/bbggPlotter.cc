@@ -373,6 +373,7 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    	if(isJet1 == false && isJet2) nJet2++;
 
 	if(jet->bDiscriminator(bTagType) < jt_bDis[0]) continue;
+	if( !isJet1 && !isJet2 ) continue;
 	
 	Jets.push_back(jet);
    }
