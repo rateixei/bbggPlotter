@@ -26,7 +26,7 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: Pho1, 1: Pho2
 	PhotonElectronVeto=cms.untracked.vdouble(0., 0.),
 	#0: Pho1, 1: Pho2
-	PhotonDoID=cms.untracked.vdouble(0, 0,),
+	PhotonDoID=cms.untracked.vint32(0, 0,),
 	#0: lower boundary for dipho pt
 	DiPhotonPt=cms.untracked.vdouble(0.),
 	#0: upper boundary
@@ -34,13 +34,13 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: DiPhoton mass window lower boundary, 1: upper boundary
 	DiPhotonMassWindow=cms.untracked.vdouble(80., 165.),
 	#0: jet1, 1: jet2
-	JetPtOverDiJetMass=cms.untracked.vdouble(10., 10.),
+	JetPtOverDiJetMass=cms.untracked.vdouble(25., 25.),
 	#0: jet1, 1: jet2
 	JetEta=cms.untracked.vdouble(2.5, 2.5),
-	#0: highest b-tag requirement, 1: lowest b-tag requirement
-	JetBDiscriminant=cms.untracked.vdouble(0.5, 0.5),
+	#0: lowest b-tag requirement for any jet (default 0), standard b-tag cut (loose, medium, tight) 
+	JetBDiscriminant=cms.untracked.vdouble(0., 0.7),
 	#0: jet1, 1: jet2
-	JetDoPUID=cms.untracked.vdouble(1, 1),
+	JetDoPUID=cms.untracked.vint32(1, 1),
 	#Number of required jets passing requirements in JetBDiscriminant
 	n_bJets=cms.untracked.uint32(0),
 	#0: lower boundary for dijet pt
@@ -50,7 +50,11 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: DiJet mass window lower boundary, 1: upper boundary
 	DiJetMassWindow=cms.untracked.vdouble(40., 200.),
 	#0: 4-candidate mass window lower boundary, 1: upper boundary
-	CandidateMassWindow=cms.untracked.vdouble(0, 1000.),
+	CandidateMassWindow=cms.untracked.vdouble(0, 9000.),
+	#0 4-candidate pt lower bound
+	CandidatePt=cms.untracked.vdouble(0.),
+	#0 4-candidate eta upper bound
+	CandidateEta=cms.untracked.vdouble(20.),
 	#string for btag algorithm
 	bTagType=cms.untracked.string('pfCombinedInclusiveSecondaryVertexV2BJetTags')
 )
