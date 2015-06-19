@@ -38,7 +38,7 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: jet1, 1: jet2
 	JetEta=cms.untracked.vdouble(2.5, 2.5),
 	#0: lowest b-tag requirement for any jet (default 0), standard b-tag cut (loose, medium, tight) 
-	JetBDiscriminant=cms.untracked.vdouble(0., 0.87),
+	JetBDiscriminant=cms.untracked.vdouble(-50., 0.87),
 	#0: jet1, 1: jet2
 	JetDoPUID=cms.untracked.vint32(1, 1),
 	#Number of required jets passing requirements in JetBDiscriminant

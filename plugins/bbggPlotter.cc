@@ -71,6 +71,7 @@ class bbggPlotter : public edm::EDAnalyzer {
       double getNHisoToCutValue(const flashgg::Photon* pho, float rho);
       double getPHisoToCutValue(const flashgg::Photon* pho, float rho);
       double getEA( float eta, int whichEA);
+      double DeltaR( bbggPlotter::LorentzVector vec1, bbggPlotter::LorentzVector vec2);
 
 
       // ----------member data ---------------------------
@@ -98,6 +99,7 @@ class bbggPlotter : public edm::EDAnalyzer {
 
       std::vector<double> jt_pt;
       std::vector<double> jt_eta;
+      std::vector<double> jt_drPho;
       std::vector<double> jt_bDis;
       std::vector<int> jt_doPU;
       unsigned int n_bJets;
@@ -144,6 +146,7 @@ thejetToken_( consumes<edm::View<flashgg::Jet> >( iConfig.getUntrackedParameter<
 
       std::vector<double> def_jt_pt;
       std::vector<double> def_jt_eta;
+      std::vector<double> def_jt_drPho;
       std::vector<double> def_jt_bDis;
       std::vector<int> def_jt_doPU;
       unsigned int def_n_bJets;
@@ -185,6 +188,7 @@ thejetToken_( consumes<edm::View<flashgg::Jet> >( iConfig.getUntrackedParameter<
       def_dijt_pt.push_back(10.);       def_dijt_pt.push_back(10.);
       def_dijt_eta.push_back(20.);       def_dijt_eta.push_back(20.);
       def_dijt_mass.push_back(0.);      def_dijt_mass.push_back(1000.);
+      def_jt_drPho.push_back(0.5);
 
       def_cand_pt.push_back(0.);
       def_cand_eta.push_back(20.);
@@ -212,6 +216,7 @@ thejetToken_( consumes<edm::View<flashgg::Jet> >( iConfig.getUntrackedParameter<
 
       jt_pt     = iConfig.getUntrackedParameter<std::vector<double > >("JetPtOverDiJetMass", def_jt_pt);
       jt_eta    = iConfig.getUntrackedParameter<std::vector<double > >("JetEta", def_jt_eta);
+      jt_drPho  = iConfig.getUntrackedParameter<std::vector<double > >("JetDrPho", def_jt_drPho);
       jt_bDis   = iConfig.getUntrackedParameter<std::vector<double > >("JetBDiscriminant", def_jt_bDis);
       jt_doPU   = iConfig.getUntrackedParameter<std::vector<int > >("JetDoPUID", def_jt_doPU);
 
@@ -269,8 +274,8 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    double pho2_pt = -1, pho2_eta = -1, pho2_phi = -1;
    double pho2_hoe = -1, pho2_sieie = -1, pho2_r9 = -1, pho2_chiso = -1, pho2_nhiso = -1, pho2_phiso = -1, pho2_elveto = -1;
    
-   double jet1_pt = -1, jet1_eta = -1, jet1_phi = -1, jet1_bDis = -1, jet1_PUid = -1;
-   double jet2_pt = -1, jet2_eta = -1, jet2_phi = -1, jet2_bDis = -1, jet2_PUid = -1;
+   double jet1_pt = -1, jet1_eta = -1, jet1_phi = -1, jet1_bDis = -1, jet1_PUid = -1, jet1_drPho1 = -1, jet1_drPho2 = -1;
+   double jet2_pt = -1, jet2_eta = -1, jet2_phi = -1, jet2_bDis = -1, jet2_PUid = -1, jet2_drPho1 = -1, jet2_drPho2 = -1;
 
    Handle<View<flashgg::DiPhotonCandidate> > diPhotons;
    iEvent.getByToken( diPhotonToken_, diPhotons );
@@ -376,6 +381,8 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
 	if(jet->bDiscriminator(bTagType) < jt_bDis[0]) continue;
 	if( !isJet1 && !isJet2 ) continue;
+	if( bbggPlotter::DeltaR(jet->p4(), diphoCand->leadingPhoton()->p4()) < jt_drPho[0] 
+            || bbggPlotter::DeltaR(jet->p4(), diphoCand->subLeadingPhoton()->p4()) < jt_drPho[0] ) continue;
 	
 	Jets.push_back(jet);
    }
@@ -437,9 +444,16 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    jet2_phi = jet2->phi();
    jet2_bDis = jet2->bDiscriminator(bTagType);
    jet2_PUid = jet2->passesPuJetId(CandVtx);
+
+   jet1_drPho1 = bbggPlotter::DeltaR(jet1->p4(), diphoCand->leadingPhoton()->p4());
+   jet1_drPho2 = bbggPlotter::DeltaR(jet1->p4(), diphoCand->subLeadingPhoton()->p4());
+   jet2_drPho1 = bbggPlotter::DeltaR(jet2->p4(), diphoCand->leadingPhoton()->p4());
+   jet2_drPho2 = bbggPlotter::DeltaR(jet2->p4(), diphoCand->subLeadingPhoton()->p4());
+
    //End Jets Loop/Selection -----------------------------------------------------------
    
    //Candidate assignment --------------------------------------------------------------
+   double deltaR = bbggPlotter::DeltaR(DiJet, diphoCand->p4());
    bbggPlotter::LorentzVector HHCandidate = DiJet + diphoCand->p4();
    cand4_pt = HHCandidate.pt();
    cand4_eta = HHCandidate.eta();
@@ -456,6 +470,9 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    if(DEBUG) std::cout << "GOT TO THE END!!" << std::endl;
 
+   hists["dr_dijetdipho"].Fill( deltaR );
+
+   hists2D["candmass_deltar"].Fill( cand4_mass, deltaR );
    hists2D["candmass_dijetmass"].Fill(cand4_mass, dijet_mass);
    hists2D["candmass_diphomass"].Fill(cand4_mass, dipho_mass);
 
@@ -501,20 +518,32 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
    hists["jet1_pt"].Fill(jet1_pt);
    hists["jet1_eta"].Fill(jet1_eta);
    hists["jet1_phi"].Fill(jet1_phi);
+   hists["jet1_drPho1"].Fill(jet1_drPho1);
+   hists["jet1_drPho2"].Fill(jet1_drPho2);
    hists["jet1_bDis"].Fill(jet1_bDis);
    hists["jet1_PUid"].Fill(jet1_PUid);
 	
    hists["jet2_pt"].Fill(jet2_pt);
    hists["jet2_eta"].Fill(jet2_eta);
    hists["jet2_phi"].Fill(jet2_phi);
+   hists["jet2_drPho1"].Fill(jet2_drPho1);
+   hists["jet2_drPho2"].Fill(jet2_drPho2);
    hists["jet2_bDis"].Fill(jet2_bDis);
    hists["jet2_PUid"].Fill(jet2_PUid);
+
 
    if(DEBUG) std::cout << "Histograms filled!" << std::endl;
 }
 
 // ------------ Extra methods... -------------
 //
+
+double bbggPlotter::DeltaR(bbggPlotter::LorentzVector vec1, bbggPlotter::LorentzVector vec2)
+{
+	double R2 = (vec1.phi() - vec2.phi())*(vec1.phi() - vec2.phi()) + (vec1.eta() - vec2.eta())*(vec1.eta() - vec2.eta());
+	return sqrt(R2);
+}
+
 double bbggPlotter::getCHisoToCutValue(edm::Ptr<flashgg::DiPhotonCandidate> dipho, int whichPho, float rho)
 {
 	if( whichPho > 1 ) {
@@ -606,10 +635,12 @@ bbggPlotter::beginJob()
 	hists["dijet_phi"]	= TH1F("dijet_phi", "DiJet #phi; #phi(jj); Events", 100, -3.5, 3.5);
 	hists["dijet_mass"] 	= TH1F("dijet_mass", "DiJet Mass; M(jj); Events", 100, 0, 500);
 
+	hists["dr_dijetdipho"]	= TH1F("dr_dijetdipho", "DeltaR between DiJet and DiPhoton; #DeltaR(#gamma#gamma,jj); Events", 100, -1, 10);
+
 	hists["cand4_pt"] 	= TH1F("cand_pt", "DiHiggs Candidate (jj#gamma#gamma) p_{T}; p_{T}(jj#gamma#gamma) (GeV); Events", 100, 0, 700);
 	hists["cand4_eta"] 	= TH1F("cand_eta", "DiHiggs Candidate (jj#gamma#gamma) #eta; #eta(jj#gamma#gamma); Events", 100, -5, 5);
 	hists["cand4_phi"]	= TH1F("cand_phi", "DiHiggs Candidate (jj#gamma#gamma) #phi; #phi(jj#gamma#gamma); Events", 100, -3.5, 3.5); 
-	hists["cand4_mass"] 	= TH1F("cand_mass", "DiHiggs Candidate (jj#gamma#gamma) Mass; M(jj#gamma#gamma) (GeV); Events", 100, 100, 800);
+	hists["cand4_mass"] 	= TH1F("cand_mass", "DiHiggs Candidate (jj#gamma#gamma) Mass; M(jj#gamma#gamma) (GeV); Events", 100, 100, 1000);
 
 	hists["pho1_pt"] 	= TH1F("pho1_pt", "Leading Photon p_{T}; p_{T}(leading #gamma) (GeV); Events", 100, 10, 150);
 	hists["pho1_eta"] 	= TH1F("pho1_eta", "Leading Photon #eta; #eta(leading #gamma); Events", 100, -5., 5.);
@@ -639,17 +670,22 @@ bbggPlotter::beginJob()
 	hists["jet1_pt"] 	= TH1F("jet1_pt", "Leading Jet p_{T}; p_{T}(leading jet) (GeV); Events", 100, 0, 300);
 	hists["jet1_eta"] 	= TH1F("jet1_eta", "Leading Jet #eta; #eta(leading jet); Events", 100, -5., 5.);
 	hists["jet1_phi"]	= TH1F("jet1_phi", "Leading Jet #phi; #phi(leading jet); Events", 100, -3.5, 3.5);
+	hists["jet1_drPho1"]	= TH1F("jet1_drPho1", "Leading Jet DeltaR with Leading Photon; Events", 100, -1, 10);
+	hists["jet1_drPho2"]	= TH1F("jet1_drPho2", "Leading Jet DeltaR with SubLeading Photon; Events", 100, -1, 10);
 	hists["jet1_bDis"] 	= TH1F("jet1_bDis", "Leading Jet b-Discriminant; b-Discriminant(leading jet); Events", 100, -0.01, 1.01);
 	hists["jet1_PUid"] 	= TH1F("jet1_PUid", "Leading Jet PU ID; PU ID(leading jet); Events", 8, -1, 3);
 
 	hists["jet2_pt"] 	= TH1F("jet2_pt", "SubLeading Jet p_{T}; p_{T}(subLeading jet) (GeV); Events", 100, 0, 300);
 	hists["jet2_eta"] 	= TH1F("jet2_eta", "SubLeading Jet #eta; #eta(subLeading jet); Events", 100, -5., 5.);
 	hists["jet2_phi"]	= TH1F("jet2_phi", "SubLeading Jet #phi; #phi(subleading jet); Events", 100, -3.5, 3.5);
+	hists["jet2_drPho1"]	= TH1F("jet2_drPho1", "SubLeading Jet DeltaR with Leading Photon; Events", 100, -1, 10);
+	hists["jet2_drPho2"]	= TH1F("jet2_drPho2", "SubLeading Jet DeltaR with SubLeading Photon; Events", 100, -1, 10);
 	hists["jet2_bDis"] 	= TH1F("jet2_bDis", "SubLeading Jet b-Discriminant; b-Discriminant(subLeading jet); Events", 100, -0.01, 1.01);
 	hists["jet2_PUid"] 	= TH1F("jet2_PUid", "SubLeading Jet PU ID; PU ID(subleading jet); Events", 8, -1, 3);
 
 	hists2D["candmass_dijetmass"] = TH2F("candmass_dijetmass", "DiHiggs Candidate Mass vs DiJet Mass; M((jj#gamma#gamma) (GeV); M(jj)", 100, 100, 800, 100, 0, 500);
 	hists2D["candmass_diphomass"] = TH2F("candmass_diphomass", "DiHiggs Candidate Mass vs DiPhoton Mass; M((jj#gamma#gamma) (GeV); M(#gamma#gamma)", 100, 100, 800, 100, 110, 150);
+	hists2D["candmass_deltar"]    = TH2F("candmass_deltar", "DiHiggs Candidate Mass vs DeltaR between DiCandidates; M((jj#gamma#gamma) (GeV); #DeltaR(#gamma#gamma,jj)", 100, 100, 800, 100, -1, 10);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
