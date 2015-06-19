@@ -28,6 +28,7 @@
 //root include files
 #include "TLorentzVector.h"
 #include "TH1F.h"
+#include "TH2F.h"
 #include "TFile.h"
 
 // user include files
@@ -112,6 +113,7 @@ class bbggPlotter : public edm::EDAnalyzer {
       //OutFile & Hists
       TFile* outFile;
       std::map<std::string, TH1F> hists;
+      std::map<std::string, TH2F> hists2D;
       std::string fileName;
 
       //Event counter for cout's
@@ -454,6 +456,9 @@ bbggPlotter::analyze(const edm::Event& iEvent, const edm::EventSetup& iSetup)
 
    if(DEBUG) std::cout << "GOT TO THE END!!" << std::endl;
 
+   hists2D["candmass_dijetmass"].Fill(cand4_mass, dijet_mass);
+   hists2D["candmass_diphomass"].Fill(cand4_mass, dipho_mass);
+
    hists["dipho_pt"].Fill(dipho_pt);
    hists["dipho_eta"].Fill(dipho_eta);
    hists["dipho_phi"].Fill(dipho_phi);
@@ -594,7 +599,7 @@ bbggPlotter::beginJob()
 	hists["dipho_pt"] 	= TH1F("dipho_pt", "DiPhoton p_{T}; p_{T}(#gamma#gamma) (GeV); Events", 100, 0, 400);
 	hists["dipho_eta"] 	= TH1F("dipho_eta", "DiPhoton #eta; #eta(#gamma#gamma); Events", 100, -5, 5);
 	hists["dipho_phi"]	= TH1F("dipho_phi", "DiPhoton #phi; #phi(#gamma#gamma); Events", 100, -3.5, 3.5);
-	hists["dipho_mass"] 	= TH1F("dipho_mass", "DiPhoton Mass; M(#gamma#gamma); Events", 100, diph_mass[0], diph_mass[1]);
+	hists["dipho_mass"] 	= TH1F("dipho_mass", "DiPhoton Mass; M(#gamma#gamma); Events", 100, 100, 150);
 
 	hists["dijet_pt"] 	= TH1F("dijet_pt", "DiJet p_{T}; p_{T}(jj) (GeV); Events", 100, 0, 500);
 	hists["dijet_eta"] 	= TH1F("dijet_eta", "DiJet #eta; #eta(jj); Events", 100, -5, 5);
@@ -642,6 +647,9 @@ bbggPlotter::beginJob()
 	hists["jet2_phi"]	= TH1F("jet2_phi", "SubLeading Jet #phi; #phi(subleading jet); Events", 100, -3.5, 3.5);
 	hists["jet2_bDis"] 	= TH1F("jet2_bDis", "SubLeading Jet b-Discriminant; b-Discriminant(subLeading jet); Events", 100, -0.01, 1.01);
 	hists["jet2_PUid"] 	= TH1F("jet2_PUid", "SubLeading Jet PU ID; PU ID(subleading jet); Events", 8, -1, 3);
+
+	hists2D["candmass_dijetmass"] = TH2F("candmass_dijetmass", "DiHiggs Candidate Mass vs DiJet Mass; M((jj#gamma#gamma) (GeV); M(jj)", 100, 100, 800, 100, 0, 500);
+	hists2D["candmass_diphomass"] = TH2F("candmass_diphomass", "DiHiggs Candidate Mass vs DiPhoton Mass; M((jj#gamma#gamma) (GeV); M(#gamma#gamma)", 100, 100, 800, 100, 110, 150);
 }
 
 // ------------ method called once each job just after ending the event loop  ------------
@@ -650,6 +658,11 @@ bbggPlotter::endJob()
 {
 	outFile->cd();
 	for(std::map<std::string, TH1F>::iterator it = hists.begin(); it != hists.end(); ++it)
+	{
+		std::cout << "Saving histogram... " << it->first << std::endl;
+		it->second.Write();
+	}
+	for(std::map<std::string, TH2F>::iterator it = hists2D.begin(); it != hists2D.end(); ++it)
 	{
 		std::cout << "Saving histogram... " << it->first << std::endl;
 		it->second.Write();
