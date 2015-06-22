@@ -24,9 +24,9 @@ bbggAnalyzer = cms.EDAnalyzer('bbggPlotter',
 	#0: Pho1 EB, 1: Pho1 EE, 2: Pho2 EB, 3: Pho2 EE
 	PhotonPhotonIso=cms.untracked.vdouble(1.90, 1.90, 1.90, 1.90),
 	#0: Pho1, 1: Pho2
-	PhotonElectronVeto=cms.untracked.vdouble(0., 0.),
+	PhotonElectronVeto=cms.untracked.vint32(1, 1),
 	#0: Pho1, 1: Pho2
-	PhotonDoID=cms.untracked.vint32(0 , 0),
+	PhotonDoID=cms.untracked.vint32(1 , 1),
 	#0: lower boundary for dipho pt
 	DiPhotonPt=cms.untracked.vdouble(0.),
 	#0: upper boundary
